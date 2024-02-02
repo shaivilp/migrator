@@ -1,0 +1,63 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'java'
+    id 'maven-publish'
+}
+
+group = 'cc.insidious.nexus'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    maven {
+        url = 'https://jitpack.io'
+    }
+
+    maven {
+        url = 'https://repo.aikar.co/content/groups/aikar/'
+    }
+
+    mavenLocal()
+    mavenCentral()
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+
+publishing {
+    publications {
+        shadow(MavenPublication) { publication ->
+            project.shadow.component(publication)
+        }
+    }
+}
+
+compileJava.options.encoding = 'UTF-8'
+
+compileJava {
+    options.encoding = 'UTF-8'
+    sourceCompatibility = 17
+    targetCompatibility = 17
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+test {
+    systemProperty "file.encoding", "utf-8"
+}
+
+shadowJar {
+    archiveBaseName.set('Nexus-API-1.0-SNAPSHOT')
+    archiveClassifier.set('')
+    archiveVersion.set('')
+}
+
+dependencies {
+    compileOnly('org.projectlombok:lombok:1.18.26')
+    annotationProcessor('org.projectlombok:lombok:1.18.26')
+    compileOnly('org.apache.logging.log4j:log4j-core:3.0.0-beta1')
+    compileOnly('org.seleniumhq.selenium:selenium-java:4.17.0')
+    compileOnly('org.junit.jupiter:junit-jupiter-engine:5.10.0')
+}
