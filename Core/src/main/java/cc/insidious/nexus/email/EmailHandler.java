@@ -2,18 +2,18 @@ package cc.insidious.nexus.email;
 
 import cc.insidious.nexus.NexusApplication;
 import cc.insidious.nexus.account.Account;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.WindowType;
+import cc.insidious.nexus.migration.MigrationHandler;
+import org.openqa.selenium.*;
 
 import java.time.Duration;
 
 public class EmailHandler {
     private final NexusApplication instance;
+    private final MigrationHandler migrationHandler;
 
     public EmailHandler(NexusApplication instance) {
         this.instance = instance;
+        migrationHandler = instance.getMigrationHandler();
     }
 
     public void handleBackupEmail(Account account) {
@@ -69,7 +69,6 @@ public class EmailHandler {
             e.printStackTrace();
         }
         driver.findElement(By.cssSelector("input[type='submit'][id='iNext']")).click();
-
         verifyBackupEmail(driver, account);
 
     }
@@ -77,31 +76,41 @@ public class EmailHandler {
     private void verifyBackupEmail(WebDriver driver, Account account){
         String email = account.getMigrationEmail();
 
-        //TODO: Check if page even comes up
-        WebElement radioButton = driver.findElement(By.cssSelector("input[type='radio'][name='proof'][id='iProof0']"));
-        radioButton.click();
+        try {
+            WebElement radioButton = driver.findElement(By.cssSelector("input[type='radio'][name='proof'][id='iProof0']"));
+            radioButton.click();
 
-        WebElement emailField = driver.findElement(By.cssSelector("input[type='email'][id='iProofEmail']"));
-        emailField.sendKeys(email);
+            System.out.println("Found element to verify email!");
 
-        WebElement submitButton = driver.findElement(By.cssSelector("input[type='submit'][id='iSelectProofAction']"));
-        submitButton.click();
+            WebElement emailField = driver.findElement(By.cssSelector("input[type='email'][id='iProofEmail']"));
+            emailField.sendKeys(email);
 
-        String returnPage = driver.getWindowHandle();
+            WebElement submitButton = driver.findElement(By.cssSelector("input[type='submit'][id='iSelectProofAction']"));
+            submitButton.click();
 
-        int code = instance.getSecurityHandler().getSecurityCode(1);
+            String returnPage = driver.getWindowHandle();
 
-        if (code == -1) {
-            System.out.println("Invalid security code.");
-            return;
+            int code = instance.getSecurityHandler().getSecurityCode(1);
+
+            if (code == -1) {
+                System.out.println("Invalid security code.");
+                return;
+            }
+
+            driver.switchTo().window(returnPage);
+
+            WebElement verifyCode = driver.findElement(By.cssSelector("input#iOttText[type='tel']"));
+            verifyCode.sendKeys(String.valueOf(code));
+
+            WebElement verifyCodeButton = driver.findElement(By.cssSelector("input#iVerifyCodeAction[type='submit']"));
+            verifyCodeButton.click();
+
+            //Handle useless popups
+            migrationHandler.handlePopups(account);
+        } catch (Exception e){
+            migrationHandler.handlePopups(account);
+            System.out.println("No verify email element found!");
         }
-
-        driver.switchTo().window(returnPage);
-
-        WebElement verifyCode = driver.findElement(By.cssSelector("input#iOttText[type='tel']"));
-        verifyCode.sendKeys(String.valueOf(code));
-
-        WebElement verifyCodeButton = driver.findElement(By.cssSelector("input#iVerifyCodeAction[type='submit']"));
-        verifyCodeButton.click();
     }
+
 }
