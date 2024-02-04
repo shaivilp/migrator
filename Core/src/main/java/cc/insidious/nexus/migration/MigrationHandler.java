@@ -21,10 +21,10 @@ public class MigrationHandler {
 //            return;
 //        }
         Account account = new Account(
-                "PhillidaGotta36414@hotmail.com",
-                "nRcxZWoPtD9E",
-                "migratedalts26@alts.mcsniper.net",
-                "ocUXRuvxOXqOtrSBX@230");
+                "",
+                "",
+                "",
+                "");
 
 
         String email = account.getEmail();
